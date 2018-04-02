@@ -46,7 +46,8 @@ namespace OpenRA.Graphics
 			rowStride = 6 * map.MapSize.X;
 
 			vertices = new Vertex[rowStride * map.MapSize.Y];
-			vertexBuffer = Game.Renderer.Device.CreateVertexBuffer(vertices.Length);
+			// vertexBuffer = Game.Renderer.Device.CreateVertexBuffer(vertices.Length);
+			vertexBuffer = null;
 			emptySprite = new Sprite(sheet, Rectangle.Empty, TextureChannel.Alpha);
 
 			wr.PaletteInvalidated += UpdatePaletteIndices;
@@ -135,7 +136,7 @@ namespace OpenRA.Graphics
 		public void Dispose()
 		{
 			worldRenderer.PaletteInvalidated -= UpdatePaletteIndices;
-			vertexBuffer.Dispose();
+			// vertexBuffer.Dispose();
 		}
 	}
 }

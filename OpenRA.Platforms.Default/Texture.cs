@@ -46,8 +46,8 @@ namespace OpenRA.Platforms.Default
 
 		public Texture()
 		{
-			OpenGL.glGenTextures(1, out texture);
-			OpenGL.CheckGLError();
+			// OpenGL.glGenTextures(1, out texture);
+			// OpenGL.CheckGLError();
 		}
 
 		public Texture(Bitmap bitmap)

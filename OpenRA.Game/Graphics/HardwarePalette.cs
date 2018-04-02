@@ -27,7 +27,7 @@ namespace OpenRA.Graphics
 
 		public HardwarePalette()
 		{
-			Texture = Game.Renderer.Device.CreateTexture();
+			Texture = null;
 			readOnlyModifiablePalettes = modifiablePalettes.AsReadOnly();
 		}
 
@@ -106,7 +106,7 @@ namespace OpenRA.Graphics
 
 		void CopyBufferToTexture()
 		{
-			Texture.SetData(buffer, Palette.Size, Height);
+			// Texture.SetData(buffer, Palette.Size, Height);
 		}
 
 		public void ApplyModifiers(IEnumerable<IPaletteModifier> paletteMods)
@@ -129,7 +129,7 @@ namespace OpenRA.Graphics
 
 		public void Dispose()
 		{
-			Texture.Dispose();
+			// Texture.Dispose();
 		}
 	}
 }

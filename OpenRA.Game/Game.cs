@@ -155,7 +155,6 @@ namespace OpenRA
 			if (worldRenderer != null)
 				worldRenderer.Dispose();
 
-			Cursor.SetCursor(null);
 			BeforeGameStart();
 
 			Map map;
@@ -184,7 +183,6 @@ namespace OpenRA
 			OrderManager.LastTickTime = RunTime;
 			OrderManager.StartGame();
 			worldRenderer.RefreshPalette();
-			Cursor.SetCursor("default");
 
 			GC.Collect();
 		}
@@ -290,41 +288,8 @@ namespace OpenRA
 			Log.AddChannel("irc", "irc.log");
 			Log.AddChannel("nat", "nat.log");
 
-			var platforms = new[] { Settings.Game.Platform, "Default", null };
-			foreach (var p in platforms)
-			{
-				if (p == null)
-					throw new InvalidOperationException("Failed to initialize platform-integration library. Check graphics.log for details.");
-
-				Settings.Game.Platform = p;
-				try
-				{
-					var rendererPath = Platform.ResolvePath(Path.Combine(".", "OpenRA.Platforms." + p + ".dll"));
-					var assembly = Assembly.LoadFile(rendererPath);
-
-					var platformType = assembly.GetTypes().SingleOrDefault(t => typeof(IPlatform).IsAssignableFrom(t));
-					if (platformType == null)
-						throw new InvalidOperationException("Platform dll must include exactly one IPlatform implementation.");
-
-					var platform = (IPlatform)platformType.GetConstructor(Type.EmptyTypes).Invoke(null);
-					Renderer = new Renderer(platform, Settings.Graphics);
-					Sound = new Sound(platform, Settings.Sound);
-
-					break;
-				}
-				catch (Exception e)
-				{
-					Log.Write("graphics", "{0}", e);
-					Console.WriteLine("Renderer initialization failed. Check graphics.log for details.");
-
-					if (Renderer != null)
-						Renderer.Dispose();
-
-					if (Sound != null)
-						Sound.Dispose();
-				}
-			}
-
+			Sound = new Sound();
+			Renderer = new Renderer(Settings.Graphics);
 			GeoIP.Initialize();
 
 			if (Settings.Server.DiscoverNatDevices)
@@ -413,32 +378,6 @@ namespace OpenRA
 
 			ModData.InitializeLoaders(ModData.DefaultFileSystem);
 			Renderer.InitializeFonts(ModData);
-
-			var grid = ModData.Manifest.Contains<MapGrid>() ? ModData.Manifest.Get<MapGrid>() : null;
-			Renderer.InitializeDepthBuffer(grid);
-
-			if (Cursor != null)
-				Cursor.Dispose();
-
-			if (Settings.Graphics.HardwareCursors)
-			{
-				try
-				{
-					Cursor = new HardwareCursor(ModData.CursorProvider);
-				}
-				catch (Exception e)
-				{
-					Log.Write("debug", "Failed to initialize hardware cursors. Falling back to software cursors.");
-					Log.Write("debug", "Error was: " + e.Message);
-
-					Console.WriteLine("Failed to initialize hardware cursors. Falling back to software cursors.");
-					Console.WriteLine("Error was: " + e.Message);
-
-					Cursor = new SoftwareCursor(ModData.CursorProvider);
-				}
-			}
-			else
-				Cursor = new SoftwareCursor(ModData.CursorProvider);
 
 			PerfHistory.Items["render"].HasNormalTick = false;
 			PerfHistory.Items["batches"].HasNormalTick = false;
@@ -560,7 +499,6 @@ namespace OpenRA
 				Ui.LastTickTime += integralTickTimestep >= TimestepJankThreshold ? integralTickTimestep : Timestep;
 
 				Sync.CheckSyncUnchanged(world, Ui.Tick);
-				Cursor.Tick();
 			}
 
 			var worldTimestep = world == null ? Timestep : world.Timestep;
@@ -778,7 +716,7 @@ namespace OpenRA
 						var maxRenderInterval = Math.Max(1000 / MinReplayFps, renderInterval);
 						forcedNextRender = now + maxRenderInterval;
 
-						RenderTick();
+						 // RenderTick();
 					}
 				}
 				else

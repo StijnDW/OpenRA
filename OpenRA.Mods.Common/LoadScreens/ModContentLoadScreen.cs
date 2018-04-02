@@ -21,23 +21,23 @@ namespace OpenRA.Mods.Common.LoadScreens
 {
 	public sealed class ModContentLoadScreen : ILoadScreen
 	{
-		Sprite sprite;
-		Rectangle bounds;
+		// Sprite sprite;
+		// Rectangle bounds;
 
 		public void Init(ModData modData, Dictionary<string, string> info)
 		{
-			var res = Game.Renderer.Resolution;
-			bounds = new Rectangle(0, 0, res.Width, res.Height);
+			// var res = Game.Renderer.Resolution;
+			// bounds = new Rectangle(0, 0, res.Width, res.Height);
 
-			using (var stream = modData.DefaultFileSystem.Open(info["Image"]))
-			{
-				var sheet = new Sheet(SheetType.BGRA, stream);
-				sprite = new Sprite(sheet, new Rectangle(0, 0, 1024, 480), TextureChannel.Alpha);
-			}
+			// using (var stream = modData.DefaultFileSystem.Open(info["Image"]))
+			// {
+			// 	var sheet = new Sheet(SheetType.BGRA, stream);
+			// 	sprite = new Sprite(sheet, new Rectangle(0, 0, 1024, 480), TextureChannel.Alpha);
+			// }
 		}
 
 		public void Display()
-		{
+		{/*
 			var r = Game.Renderer;
 			if (r == null)
 				return;
@@ -45,7 +45,7 @@ namespace OpenRA.Mods.Common.LoadScreens
 			r.BeginFrame(int2.Zero, 1f);
 			WidgetUtils.FillRectWithSprite(bounds, sprite);
 			r.EndFrame(new NullInputHandler());
-		}
+		*/}
 
 		public void StartGame(Arguments args)
 		{
@@ -56,31 +56,31 @@ namespace OpenRA.Mods.Common.LoadScreens
 
 			var content = selectedMod.Get<ModContent>(Game.ModData.ObjectCreator);
 
-			Ui.LoadWidget("MODCONTENT_BACKGROUND", Ui.Root, new WidgetArgs());
+			// Ui.LoadWidget("MODCONTENT_BACKGROUND", Ui.Root, new WidgetArgs());
 
 			if (!IsModInstalled(content))
 			{
-				var widgetArgs = new WidgetArgs
-				{
-					{ "continueLoading", () =>
-						Game.RunAfterTick(() => Game.InitializeMod(modId, new Arguments())) },
-					{ "mod", selectedMod },
-					{ "content", content },
-				};
+				// var widgetArgs = new WidgetArgs
+				// {
+				// 	{ "continueLoading", () =>
+				// 		Game.RunAfterTick(() => Game.InitializeMod(modId, new Arguments())) },
+				// 	{ "mod", selectedMod },
+				// 	{ "content", content },
+				// };
 
-				Ui.OpenWindow("CONTENT_PROMPT_PANEL", widgetArgs);
+				// Ui.OpenWindow("CONTENT_PROMPT_PANEL", widgetArgs);
 			}
 			else
 			{
-				var widgetArgs = new WidgetArgs
-				{
-					{ "mod", selectedMod },
-					{ "content", content },
-					{ "onCancel", () =>
-						Game.RunAfterTick(() => Game.InitializeMod(modId, new Arguments())) }
-				};
+				// var widgetArgs = new WidgetArgs
+				// {
+				// 	{ "mod", selectedMod },
+				// 	{ "content", content },
+				// 	{ "onCancel", () =>
+				// 		Game.RunAfterTick(() => Game.InitializeMod(modId, new Arguments())) }
+				// };
 
-				Ui.OpenWindow("CONTENT_PANEL", widgetArgs);
+				// Ui.OpenWindow("CONTENT_PANEL", widgetArgs);
 			}
 		}
 
@@ -93,8 +93,8 @@ namespace OpenRA.Mods.Common.LoadScreens
 
 		public void Dispose()
 		{
-			if (sprite != null)
-				sprite.Sheet.Dispose();
+			// if (sprite != null)
+			// 	sprite.Sheet.Dispose();
 		}
 
 		public bool BeforeLoad()

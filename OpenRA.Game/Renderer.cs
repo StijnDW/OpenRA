@@ -16,6 +16,8 @@ using System.Linq;
 using OpenRA.Graphics;
 using OpenRA.Support;
 
+#pragma warning disable 414, 169, 649
+
 namespace OpenRA
 {
 	public sealed class Renderer : IDisposable
@@ -49,30 +51,48 @@ namespace OpenRA
 
 		public Renderer(IPlatform platform, GraphicSettings graphicSettings)
 		{
-			var resolution = GetResolution(graphicSettings);
+			// var resolution = GetResolution(graphicSettings);
 
-			Device = platform.CreateGraphics(new Size(resolution.Width, resolution.Height), graphicSettings.Mode);
+			// Device = platform.CreateGraphics(new Size(resolution.Width, resolution.Height), graphicSettings.Mode);
+
+			// TempBufferSize = graphicSettings.BatchSize;
+			// SheetSize = graphicSettings.SheetSize;
+
+			// WorldSpriteRenderer = new SpriteRenderer(this, Device.CreateShader("shp"));
+			// WorldRgbaSpriteRenderer = new SpriteRenderer(this, Device.CreateShader("rgba"));
+			// WorldRgbaColorRenderer = new RgbaColorRenderer(this, Device.CreateShader("color"));
+			// WorldModelRenderer = new ModelRenderer(this, Device.CreateShader("model"));
+			// RgbaColorRenderer = new RgbaColorRenderer(this, Device.CreateShader("color"));
+			// RgbaSpriteRenderer = new SpriteRenderer(this, Device.CreateShader("rgba"));
+			// SpriteRenderer = new SpriteRenderer(this, Device.CreateShader("shp"));
+
+			// tempBuffer = Device.CreateVertexBuffer(TempBufferSize);
+		}
+
+		public Renderer(GraphicSettings graphicSettings)
+		{
+			Device = null;
 
 			TempBufferSize = graphicSettings.BatchSize;
 			SheetSize = graphicSettings.SheetSize;
 
-			WorldSpriteRenderer = new SpriteRenderer(this, Device.CreateShader("shp"));
-			WorldRgbaSpriteRenderer = new SpriteRenderer(this, Device.CreateShader("rgba"));
-			WorldRgbaColorRenderer = new RgbaColorRenderer(this, Device.CreateShader("color"));
-			WorldModelRenderer = new ModelRenderer(this, Device.CreateShader("model"));
-			RgbaColorRenderer = new RgbaColorRenderer(this, Device.CreateShader("color"));
-			RgbaSpriteRenderer = new SpriteRenderer(this, Device.CreateShader("rgba"));
-			SpriteRenderer = new SpriteRenderer(this, Device.CreateShader("shp"));
+			WorldSpriteRenderer =  null;
+			WorldRgbaSpriteRenderer =  null;
+			WorldRgbaColorRenderer =  null;
+			WorldModelRenderer =  null;
+			RgbaColorRenderer =  null;
+			RgbaSpriteRenderer =  null;
+			SpriteRenderer =  null;
 
-			tempBuffer = Device.CreateVertexBuffer(TempBufferSize);
+			tempBuffer = null;
 		}
 
 		static Size GetResolution(GraphicSettings graphicsSettings)
 		{
-			var size = (graphicsSettings.Mode == WindowMode.Windowed)
-				? graphicsSettings.WindowedSize
-				: graphicsSettings.FullscreenSize;
-			return new Size(size.X, size.Y);
+			// var size = (graphicsSettings.Mode == WindowMode.Windowed)
+			// 	? graphicsSettings.WindowedSize
+			// 	: graphicsSettings.FullscreenSize;
+			return new Size(800, 800);
 		}
 
 		public void InitializeFonts(ModData modData)
@@ -87,14 +107,14 @@ namespace OpenRA
 				fontSheetBuilder = new SheetBuilder(SheetType.BGRA, 512);
 				Fonts = modData.Manifest.Fonts.ToDictionary(x => x.Key,
 					x => new SpriteFont(x.Value.First, modData.DefaultFileSystem.Open(x.Value.First).ReadAllBytes(),
-										x.Value.Second, Device.WindowScale, fontSheetBuilder)).AsReadOnly();
+										x.Value.Second, 1f, fontSheetBuilder)).AsReadOnly();
 			}
 
-			Device.OnWindowScaleChanged += (before, after) =>
-			{
-				foreach (var f in Fonts)
-					f.Value.SetScale(after);
-			};
+			// Device.OnWindowScaleChanged += (before, after) =>
+			// {
+			// 	foreach (var f in Fonts)
+			// 		f.Value.SetScale(after);
+			// };
 		}
 
 		public void InitializeDepthBuffer(MapGrid mapGrid)
@@ -106,85 +126,85 @@ namespace OpenRA
 			//  - a small margin so that tiles rendered partially above the top edge of the screen aren't pushed behind the clip plane
 			// We need an offset of mapGrid.MaximumTerrainHeight * mapGrid.TileSize.Height / 2 to cover the terrain height
 			// and choose to use mapGrid.MaximumTerrainHeight * mapGrid.TileSize.Height / 4 for each of the actor and top-edge cases
-			this.depthScale = mapGrid == null || !mapGrid.EnableDepthBuffer ? 0 :
-				(float)Resolution.Height / (Resolution.Height + mapGrid.TileSize.Height * mapGrid.MaximumTerrainHeight);
-			this.depthOffset = this.depthScale / 2;
+			// this.depthScale = mapGrid == null || !mapGrid.EnableDepthBuffer ? 0 :
+			// 	(float)Resolution.Height / (Resolution.Height + mapGrid.TileSize.Height * mapGrid.MaximumTerrainHeight);
+			// this.depthOffset = this.depthScale / 2;
 		}
 
 		public void BeginFrame(int2 scroll, float zoom)
 		{
-			Device.Clear();
-			SetViewportParams(scroll, zoom);
+			// Device.Clear();
+			// SetViewportParams(scroll, zoom);
 		}
 
 		public void SetViewportParams(int2 scroll, float zoom)
 		{
 			// PERF: Calling SetViewportParams on each renderer is slow. Only call it when things change.
-			var resolutionChanged = lastResolution != Resolution;
-			if (resolutionChanged)
-			{
-				lastResolution = Resolution;
-				RgbaSpriteRenderer.SetViewportParams(Resolution, 0f, 0f, 1f, int2.Zero);
-				SpriteRenderer.SetViewportParams(Resolution, 0f, 0f, 1f, int2.Zero);
-				RgbaColorRenderer.SetViewportParams(Resolution, 0f, 0f, 1f, int2.Zero);
-			}
+			// var resolutionChanged = lastResolution != Resolution;
+			// if (resolutionChanged)
+			// {
+			// 	lastResolution = Resolution;
+			// 	RgbaSpriteRenderer.SetViewportParams(Resolution, 0f, 0f, 1f, int2.Zero);
+			// 	SpriteRenderer.SetViewportParams(Resolution, 0f, 0f, 1f, int2.Zero);
+			// 	RgbaColorRenderer.SetViewportParams(Resolution, 0f, 0f, 1f, int2.Zero);
+			// }
 
-			// If zoom evaluates as different due to floating point weirdness that's OK, setting the parameters again is harmless.
-			if (resolutionChanged || lastScroll != scroll || lastZoom != zoom)
-			{
-				lastScroll = scroll;
-				lastZoom = zoom;
-				WorldRgbaSpriteRenderer.SetViewportParams(Resolution, depthScale, depthOffset, zoom, scroll);
-				WorldSpriteRenderer.SetViewportParams(Resolution, depthScale, depthOffset, zoom, scroll);
-				WorldModelRenderer.SetViewportParams(Resolution, zoom, scroll);
-				WorldRgbaColorRenderer.SetViewportParams(Resolution, depthScale, depthOffset, zoom, scroll);
-			}
+			// // If zoom evaluates as different due to floating point weirdness that's OK, setting the parameters again is harmless.
+			// if (resolutionChanged || lastScroll != scroll || lastZoom != zoom)
+			// {
+			// 	lastScroll = scroll;
+			// 	lastZoom = zoom;
+			// 	WorldRgbaSpriteRenderer.SetViewportParams(Resolution, depthScale, depthOffset, zoom, scroll);
+			// 	WorldSpriteRenderer.SetViewportParams(Resolution, depthScale, depthOffset, zoom, scroll);
+			// 	WorldModelRenderer.SetViewportParams(Resolution, zoom, scroll);
+			// 	WorldRgbaColorRenderer.SetViewportParams(Resolution, depthScale, depthOffset, zoom, scroll);
+			// }
 		}
 
 		public void SetPalette(HardwarePalette palette)
 		{
-			if (palette.Texture == currentPaletteTexture)
-				return;
+			// if (palette.Texture == currentPaletteTexture)
+			// 	return;
 
-			Flush();
-			currentPaletteTexture = palette.Texture;
+			// Flush();
+			// currentPaletteTexture = palette.Texture;
 
-			RgbaSpriteRenderer.SetPalette(currentPaletteTexture);
-			SpriteRenderer.SetPalette(currentPaletteTexture);
-			WorldSpriteRenderer.SetPalette(currentPaletteTexture);
-			WorldRgbaSpriteRenderer.SetPalette(currentPaletteTexture);
-			WorldModelRenderer.SetPalette(currentPaletteTexture);
+			// RgbaSpriteRenderer.SetPalette(currentPaletteTexture);
+			// SpriteRenderer.SetPalette(currentPaletteTexture);
+			// WorldSpriteRenderer.SetPalette(currentPaletteTexture);
+			// WorldRgbaSpriteRenderer.SetPalette(currentPaletteTexture);
+			// WorldModelRenderer.SetPalette(currentPaletteTexture);
 		}
 
 		public void EndFrame(IInputHandler inputHandler)
 		{
-			Flush();
-			Device.PumpInput(inputHandler);
-			Device.Present();
+			// Flush();
+			// Device.PumpInput(inputHandler);
+			// Device.Present();
 		}
 
 		public void DrawBatch(Vertex[] vertices, int numVertices, PrimitiveType type)
 		{
-			tempBuffer.SetData(vertices, numVertices);
-			DrawBatch(tempBuffer, 0, numVertices, type);
+			// tempBuffer.SetData(vertices, numVertices);
+			// DrawBatch(tempBuffer, 0, numVertices, type);
 		}
 
 		public void DrawBatch<T>(IVertexBuffer<T> vertices,
 			int firstVertex, int numVertices, PrimitiveType type)
 			where T : struct
 		{
-			vertices.Bind();
-			Device.DrawPrimitives(type, firstVertex, numVertices);
-			PerfHistory.Increment("batches", 1);
+			// vertices.Bind();
+			// Device.DrawPrimitives(type, firstVertex, numVertices);
+			// PerfHistory.Increment("batches", 1);
 		}
 
 		public void Flush()
 		{
-			CurrentBatchRenderer = null;
+			// CurrentBatchRenderer = null;
 		}
 
-		public Size Resolution { get { return Device.WindowSize; } }
-		public float WindowScale { get { return Device.WindowScale; } }
+		public Size Resolution { get { return new Size(800,800); } }
+		public float WindowScale { get { return 1f; } }
 
 		public interface IBatchRenderer { void Flush(); }
 
@@ -192,103 +212,101 @@ namespace OpenRA
 		{
 			get
 			{
-				return currentBatchRenderer;
+				return null;
 			}
 
 			set
 			{
-				if (currentBatchRenderer == value)
-					return;
-				if (currentBatchRenderer != null)
-					currentBatchRenderer.Flush();
-				currentBatchRenderer = value;
+				return;
 			}
 		}
 
 		public IVertexBuffer<Vertex> CreateVertexBuffer(int length)
 		{
-			return Device.CreateVertexBuffer(length);
+			return null;
 		}
 
 		public void EnableScissor(Rectangle rect)
 		{
 			// Must remain inside the current scissor rect
-			if (scissorState.Any())
-				rect.Intersect(scissorState.Peek());
+			// if (scissorState.Any())
+			// 	rect.Intersect(scissorState.Peek());
 
-			Flush();
-			Device.EnableScissor(rect.Left, rect.Top, rect.Width, rect.Height);
-			scissorState.Push(rect);
+			// Flush();
+			// Device.EnableScissor(rect.Left, rect.Top, rect.Width, rect.Height);
+			// scissorState.Push(rect);
 		}
 
 		public void DisableScissor()
 		{
-			scissorState.Pop();
-			Flush();
+			// scissorState.Pop();
+			// Flush();
 
-			// Restore previous scissor rect
-			if (scissorState.Any())
-			{
-				var rect = scissorState.Peek();
-				Device.EnableScissor(rect.Left, rect.Top, rect.Width, rect.Height);
-			}
-			else
-				Device.DisableScissor();
+			// // Restore previous scissor rect
+			// if (scissorState.Any())
+			// {
+			// 	var rect = scissorState.Peek();
+			// 	Device.EnableScissor(rect.Left, rect.Top, rect.Width, rect.Height);
+			// }
+			// else
+			// 	Device.DisableScissor();
 		}
 
 		public void EnableDepthBuffer()
 		{
-			Flush();
-			Device.EnableDepthBuffer();
+			// Flush();
+			// Device.EnableDepthBuffer();
 		}
 
 		public void DisableDepthBuffer()
 		{
-			Flush();
-			Device.DisableDepthBuffer();
+			// Flush();
+			// Device.DisableDepthBuffer();
 		}
 
 		public void ClearDepthBuffer()
 		{
-			Flush();
-			Device.ClearDepthBuffer();
+			// Flush();
+			// Device.ClearDepthBuffer();
 		}
 
 		public void GrabWindowMouseFocus()
 		{
-			Device.GrabWindowMouseFocus();
+			// Device.GrabWindowMouseFocus();
 		}
 
 		public void ReleaseWindowMouseFocus()
 		{
-			Device.ReleaseWindowMouseFocus();
+			// Device.ReleaseWindowMouseFocus();
 		}
 
 		public void Dispose()
 		{
-			Device.Dispose();
-			WorldModelRenderer.Dispose();
-			tempBuffer.Dispose();
-			if (fontSheetBuilder != null)
-				fontSheetBuilder.Dispose();
-			if (Fonts != null)
-				foreach (var font in Fonts.Values)
-					font.Dispose();
+			// Device.Dispose();
+			// WorldModelRenderer.Dispose();
+			// tempBuffer.Dispose();
+			// if (fontSheetBuilder != null)
+			// 	fontSheetBuilder.Dispose();
+			// if (Fonts != null)
+			// 	foreach (var font in Fonts.Values)
+			// 		font.Dispose();
 		}
 
 		public string GetClipboardText()
 		{
-			return Device.GetClipboardText();
+			return "No";
 		}
 
 		public bool SetClipboardText(string text)
 		{
-			return Device.SetClipboardText(text);
+			return true;
 		}
 
 		public string GLVersion
 		{
-			get { return Device.GLVersion; }
+			get { return "4.3"; }
 		}
 	}
 }
+
+#pragma warning restore 414, 169, 649

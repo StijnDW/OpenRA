@@ -266,6 +266,7 @@ namespace OpenRA.Widgets
 
 		public void PostInit(WidgetArgs args)
 		{
+			/*
 			if (!Logic.Any())
 				return;
 
@@ -275,6 +276,7 @@ namespace OpenRA.Widgets
 				.ToArray();
 
 			args.Remove("widget");
+			*/
 		}
 
 		public virtual Rectangle EventBounds { get { return RenderBounds; } }

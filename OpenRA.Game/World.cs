@@ -67,6 +67,9 @@ namespace OpenRA
 					t.GameOver(this);
 
 				GameOver();
+
+				Console.WriteLine("Game Over!");
+				Game.Exit();
 			}
 		}
 

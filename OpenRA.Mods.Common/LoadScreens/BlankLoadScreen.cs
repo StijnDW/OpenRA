@@ -42,7 +42,7 @@ namespace OpenRA.Mods.Common.LoadScreens
 		public virtual void StartGame(Arguments args)
 		{
 			Launch = new LaunchArguments(args);
-			Ui.ResetAll();
+			// Ui.ResetAll();
 			Game.Settings.Save();
 
 			if (Launch.Benchmark)
@@ -129,3 +129,4 @@ namespace OpenRA.Mods.Common.LoadScreens
 		}
 	}
 }
+

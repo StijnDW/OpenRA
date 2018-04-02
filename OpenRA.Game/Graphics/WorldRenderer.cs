@@ -33,10 +33,10 @@ namespace OpenRA.Graphics
 
 		readonly HardwarePalette palette = new HardwarePalette();
 		readonly Dictionary<string, PaletteReference> palettes = new Dictionary<string, PaletteReference>();
-		readonly TerrainRenderer terrainRenderer;
-		readonly Lazy<DebugVisualizations> debugVis;
+		// readonly TerrainRenderer terrainRenderer;
+		// readonly Lazy<DebugVisualizations> debugVis;
 		readonly Func<string, PaletteReference> createPaletteReference;
-		readonly bool enableDepthBuffer;
+		// readonly bool enableDepthBuffer;
 
 		internal WorldRenderer(ModData modData, World world)
 		{
@@ -47,8 +47,8 @@ namespace OpenRA.Graphics
 
 			createPaletteReference = CreatePaletteReference;
 
-			var mapGrid = modData.Manifest.Get<MapGrid>();
-			enableDepthBuffer = mapGrid.EnableDepthBuffer;
+			// var mapGrid = modData.Manifest.Get<MapGrid>();
+			// enableDepthBuffer = mapGrid.EnableDepthBuffer;
 
 			foreach (var pal in world.TraitDict.ActorsWithTrait<ILoadsPalettes>())
 				pal.Trait.LoadPalettes(this);
@@ -59,9 +59,9 @@ namespace OpenRA.Graphics
 			palette.Initialize();
 
 			Theater = new Theater(world.Map.Rules.TileSet);
-			terrainRenderer = new TerrainRenderer(world, this);
+			// terrainRenderer = new TerrainRenderer(world, this);
 
-			debugVis = Exts.Lazy(() => world.WorldActor.TraitOrDefault<DebugVisualizations>());
+			// debugVis = Exts.Lazy(() => world.WorldActor.TraitOrDefault<DebugVisualizations>());
 		}
 
 		public void UpdatePalettesForPlayer(string internalName, HSLColor color, bool replaceExisting)
@@ -119,9 +119,9 @@ namespace OpenRA.Graphics
 
 			worldRenderables = worldRenderables.OrderBy(RenderableScreenZPositionComparisonKey);
 
-			Game.Renderer.WorldModelRenderer.BeginFrame();
+			// Game.Renderer.WorldModelRenderer.BeginFrame();
 			var renderables = worldRenderables.Select(r => r.PrepareRender(this)).ToList();
-			Game.Renderer.WorldModelRenderer.EndFrame();
+			// Game.Renderer.WorldModelRenderer.EndFrame();
 
 			return renderables;
 		}
@@ -150,9 +150,9 @@ namespace OpenRA.Graphics
 				.Concat(aboveShroudEffects)
 				.Concat(aboveShroudOrderGenerator);
 
-			Game.Renderer.WorldModelRenderer.BeginFrame();
+			// Game.Renderer.WorldModelRenderer.BeginFrame();
 			var finalOverlayRenderables = overlayRenderables.Select(r => r.PrepareRender(this)).ToList();
-			Game.Renderer.WorldModelRenderer.EndFrame();
+			// Game.Renderer.WorldModelRenderer.EndFrame();
 
 			return finalOverlayRenderables;
 		}
@@ -162,31 +162,31 @@ namespace OpenRA.Graphics
 			if (World.WorldActor.Disposed)
 				return;
 
-			if (debugVis.Value != null)
-			{
-				Game.Renderer.WorldSpriteRenderer.SetDepthPreviewEnabled(debugVis.Value.DepthBuffer);
-				Game.Renderer.WorldRgbaSpriteRenderer.SetDepthPreviewEnabled(debugVis.Value.DepthBuffer);
-				Game.Renderer.WorldRgbaColorRenderer.SetDepthPreviewEnabled(debugVis.Value.DepthBuffer);
-			}
+			// if (debugVis.Value != null)
+			// {
+			// 	Game.Renderer.WorldSpriteRenderer.SetDepthPreviewEnabled(debugVis.Value.DepthBuffer);
+			// 	Game.Renderer.WorldRgbaSpriteRenderer.SetDepthPreviewEnabled(debugVis.Value.DepthBuffer);
+			// 	Game.Renderer.WorldRgbaColorRenderer.SetDepthPreviewEnabled(debugVis.Value.DepthBuffer);
+			// }
 
 			RefreshPalette();
 
 			var onScreenActors = World.ScreenMap.RenderableActorsInBox(Viewport.TopLeft, Viewport.BottomRight).ToHashSet();
-			var renderables = GenerateRenderables(onScreenActors);
-			var bounds = Viewport.GetScissorBounds(World.Type != WorldType.Editor);
-			Game.Renderer.EnableScissor(bounds);
+			// var renderables = GenerateRenderables(onScreenActors);
+			// var bounds = Viewport.GetScissorBounds(World.Type != WorldType.Editor);
+			// Game.Renderer.EnableScissor(bounds);
 
-			if (enableDepthBuffer)
-				Game.Renderer.Device.EnableDepthBuffer();
+			// if (enableDepthBuffer)
+			// 	Game.Renderer.Device.EnableDepthBuffer();
 
-			terrainRenderer.Draw(this, Viewport);
-			Game.Renderer.Flush();
+			// terrainRenderer.Draw(this, Viewport);
+			// Game.Renderer.Flush();
 
-			for (var i = 0; i < renderables.Count; i++)
-				renderables[i].Render(this);
+			// for (var i = 0; i < renderables.Count; i++)
+			// 	renderables[i].Render(this);
 
-			if (enableDepthBuffer)
-				Game.Renderer.ClearDepthBuffer();
+			// if (enableDepthBuffer)
+			// 	Game.Renderer.ClearDepthBuffer();
 
 			foreach (var a in World.ActorsWithTrait<IRenderAboveWorld>())
 				if (a.Actor.IsInWorld && !a.Actor.Disposed)
@@ -194,16 +194,16 @@ namespace OpenRA.Graphics
 
 			var renderShroud = World.RenderPlayer != null ? World.RenderPlayer.Shroud : null;
 
-			if (enableDepthBuffer)
-				Game.Renderer.ClearDepthBuffer();
+			// if (enableDepthBuffer)
+			// 	Game.Renderer.ClearDepthBuffer();
 
 			foreach (var a in World.ActorsWithTrait<IRenderShroud>())
 				a.Trait.RenderShroud(renderShroud, this);
 
-			if (enableDepthBuffer)
-				Game.Renderer.Device.DisableDepthBuffer();
+			// if (enableDepthBuffer)
+			// 	Game.Renderer.Device.DisableDepthBuffer();
 
-			Game.Renderer.DisableScissor();
+			// Game.Renderer.DisableScissor();
 
 			var finalOverlayRenderables = GenerateOverlayRenderables(onScreenActors);
 
@@ -213,38 +213,38 @@ namespace OpenRA.Graphics
 				foreach (var r in g)
 					r.Render(this);
 
-			if (debugVis.Value != null && debugVis.Value.RenderGeometry)
-			{
-				for (var i = 0; i < renderables.Count; i++)
-					renderables[i].RenderDebugGeometry(this);
+			// if (debugVis.Value != null && debugVis.Value.RenderGeometry)
+			// {
+			// 	for (var i = 0; i < renderables.Count; i++)
+			// 		renderables[i].RenderDebugGeometry(this);
 
-				foreach (var g in groupedOverlayRenderables)
-					foreach (var r in g)
-						r.RenderDebugGeometry(this);
-			}
+			// 	foreach (var g in groupedOverlayRenderables)
+			// 		foreach (var r in g)
+			// 			r.RenderDebugGeometry(this);
+			// }
 
-			if (debugVis.Value != null && debugVis.Value.ScreenMap)
-			{
-				foreach (var r in World.ScreenMap.RenderBounds(World.RenderPlayer))
-					Game.Renderer.WorldRgbaColorRenderer.DrawRect(
-						new float3(r.Left, r.Top, r.Bottom),
-						new float3(r.Right, r.Bottom, r.Bottom),
-						1 / Viewport.Zoom, Color.MediumSpringGreen);
+			// if (debugVis.Value != null && debugVis.Value.ScreenMap)
+			// {
+			// 	foreach (var r in World.ScreenMap.RenderBounds(World.RenderPlayer))
+			// 		Game.Renderer.WorldRgbaColorRenderer.DrawRect(
+			// 			new float3(r.Left, r.Top, r.Bottom),
+			// 			new float3(r.Right, r.Bottom, r.Bottom),
+			// 			1 / Viewport.Zoom, Color.MediumSpringGreen);
 
-				foreach (var r in World.ScreenMap.MouseBounds(World.RenderPlayer))
-					Game.Renderer.WorldRgbaColorRenderer.DrawRect(
-						new float3(r.Left, r.Top, r.Bottom),
-						new float3(r.Right, r.Bottom, r.Bottom),
-						1 / Viewport.Zoom, Color.OrangeRed);
-			}
+			// 	foreach (var r in World.ScreenMap.MouseBounds(World.RenderPlayer))
+			// 		Game.Renderer.WorldRgbaColorRenderer.DrawRect(
+			// 			new float3(r.Left, r.Top, r.Bottom),
+			// 			new float3(r.Right, r.Bottom, r.Bottom),
+			// 			1 / Viewport.Zoom, Color.OrangeRed);
+			// }
 
-			Game.Renderer.Flush();
+			// Game.Renderer.Flush();
 		}
 
 		public void RefreshPalette()
 		{
 			palette.ApplyModifiers(World.WorldActor.TraitsImplementing<IPaletteModifier>());
-			Game.Renderer.SetPalette(palette);
+			// Game.Renderer.SetPalette(palette);
 		}
 
 		// Conversion between world and screen coordinates
@@ -325,7 +325,7 @@ namespace OpenRA.Graphics
 
 			palette.Dispose();
 			Theater.Dispose();
-			terrainRenderer.Dispose();
+			// terrainRenderer.Dispose();
 		}
 	}
 }
