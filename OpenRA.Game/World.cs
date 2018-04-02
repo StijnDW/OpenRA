@@ -158,7 +158,7 @@ namespace OpenRA
 			OrderManager = orderManager;
 			orderGenerator = new UnitOrderGenerator();
 			Map = map;
-			Timestep = orderManager.LobbyInfo.GlobalSettings.Timestep;
+			Timestep = 1; // orderManager.LobbyInfo.GlobalSettings.Timestep;
 			SharedRandom = new MersenneTwister(orderManager.LobbyInfo.GlobalSettings.RandomSeed);
 
 			ModelCache = modData.ModelSequenceLoader.CacheModels(map, modData, map.Rules.ModelSequences);
