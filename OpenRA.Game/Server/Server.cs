@@ -51,14 +51,29 @@ namespace OpenRA.Server
 		public ModData ModData;
 		public List<string> TempBans = new List<string>();
 
+		public GameInformation GameInfo = new GameInformation();
+
+		private OpenRA.Network.ReplayRecorder Recorder;
+
 		// Managed by LobbyCommands
 		public MapPreview Map;
+
+		public string ModType;
+		public string Version;
+
+		public bool ignore = false;
 
 		readonly int randomSeed;
 		readonly TcpListener listener;
 		readonly TypeDictionary serverTraits = new TypeDictionary();
 
 		protected volatile ServerState internalState = ServerState.WaitingPlayers;
+
+		public string TimestampedFilename(bool includemilliseconds = false)
+		{
+			var format = includemilliseconds ? "yyyy-MM-ddTHHmmssfffZ" : "yyyy-MM-ddTHHmmssZ";
+			return "Ranked" + (Port % 10).ToString() + "-" + DateTime.UtcNow.ToString(format, CultureInfo.InvariantCulture);
+		}
 
 		public ServerState State
 		{
@@ -114,6 +129,9 @@ namespace OpenRA.Server
 		{
 			foreach (var t in serverTraits.WithInterface<IEndGame>())
 				t.GameEnded(this);
+
+			GameInfo.EndTimeUtc = DateTime.UtcNow;
+			Recorder.Dispose();
 		}
 
 		public Server(IPEndPoint endpoint, ServerSettings settings, ModData modData, bool dedicated)
@@ -133,6 +151,8 @@ namespace OpenRA.Server
 			ModData = modData;
 
 			randomSeed = (int)DateTime.Now.ToBinary();
+
+			Recorder = new ReplayRecorder(() => { return TimestampedFilename(); });
 
 			if (UPnP.Status == UPnPStatus.Enabled)
 				UPnP.ForwardPort(Settings.ListenPort, Settings.ExternalPort).Wait();
@@ -421,6 +441,18 @@ namespace OpenRA.Server
 				SendData(c.Socket, BitConverter.GetBytes(client));
 				SendData(c.Socket, BitConverter.GetBytes(frame));
 				SendData(c.Socket, data);
+
+				if(!ignore)
+				{
+					byte[] newValues = new byte[data.Length + 4];
+					byte[] frameBytes = BitConverter.GetBytes(frame);
+					newValues[0] = frameBytes[0];                // set the prepended value
+					newValues[1] = frameBytes[1];
+					newValues[2] = frameBytes[2];
+					newValues[3] = frameBytes[3];
+					Array.Copy(data, 0, newValues, 4, data.Length); // copy the old values
+					Recorder.Receive(client, newValues);
+				}
 			}
 			catch (Exception e)
 			{
@@ -428,13 +460,27 @@ namespace OpenRA.Server
 				Log.Write("server", "Dropping client {0} because dispatching orders failed: {1}",
 					client.ToString(CultureInfo.InvariantCulture), e);
 			}
+			ignore = false;
 		}
 
 		public void DispatchOrdersToClients(Connection conn, int frame, byte[] data)
 		{
 			var from = conn != null ? conn.PlayerIndex : 0;
+
+			byte[] newValues = new byte[data.Length + 4];
+			byte[] frameBytes = BitConverter.GetBytes(frame);
+			newValues[0] = frameBytes[0];                // set the prepended value
+			newValues[1] = frameBytes[1];
+			newValues[2] = frameBytes[2];
+			newValues[3] = frameBytes[3];
+			Array.Copy(data, 0, newValues, 4, data.Length); // copy the old values
+			Recorder.Receive(from, newValues);
+
 			foreach (var c in Conns.Except(conn).ToList())
+			{
+				ignore = true;
 				DispatchOrdersToClient(c, from, frame, data);
+			}
 		}
 
 		public void DispatchOrders(Connection conn, int frame, byte[] data)
@@ -513,6 +559,12 @@ namespace OpenRA.Server
 
 				case "Chat":
 				case "TeamChat":
+					{
+						var client = GetClient(conn);
+						Console.WriteLine("Received chat: {0} ({1}) : {2}", client.Name, client.IpAddress, so.Data);
+						goto case "PauseGame";
+					}
+
 				case "PauseGame":
 					DispatchOrdersToClients(conn, 0, so.Serialize());
 					break;
@@ -699,6 +751,34 @@ namespace OpenRA.Server
 
 			SyncLobbyInfo();
 			State = ServerState.GameStarted;
+
+			// TODO Add to GameInformation
+			List<GameInformation.Player> players = new List<GameInformation.Player>();
+			foreach (var c in LobbyInfo.Clients)
+			{
+				var p = new GameInformation.Player();
+				p.ClientIndex = c.Index;
+				p.Name = c.Name;
+				p.IsHuman = c.Bot == null;
+				p.IsBot = c.Bot != null;
+				p.FactionName = c.Faction;
+				// p.FactionId = -1;
+				p.Color = c.Color;
+				p.Team = c.Team;
+				p.SpawnPoint = c.SpawnPoint;
+				// p.IsRandomFaction = c.;
+				// p.IsRandomSpawnPoint = c.;
+				// p.WinState Outcome;
+				// p.DateTime OutcomeTimestampUtc;
+			    players.Add(p);
+			}
+			GameInfo.Players = players;
+			GameInfo.StartTimeUtc = DateTime.UtcNow;
+			GameInfo.Mod = ModType;
+			GameInfo.Version = Version;
+			GameInfo.MapUid = Map.Uid;
+			GameInfo.MapTitle = Map.Title;
+			Recorder.Metadata = new OpenRA.FileFormats.ReplayMetadata(GameInfo);
 
 			foreach (var c in Conns)
 				foreach (var d in Conns)
