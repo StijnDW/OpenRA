@@ -58,9 +58,6 @@ namespace OpenRA.Server
 		// Managed by LobbyCommands
 		public MapPreview Map;
 
-		public string ModType;
-		public string Version;
-
 		public bool ignore = false;
 
 		readonly int randomSeed;
@@ -774,8 +771,8 @@ namespace OpenRA.Server
 			}
 			GameInfo.Players = players;
 			GameInfo.StartTimeUtc = DateTime.UtcNow;
-			GameInfo.Mod = ModType;
-			GameInfo.Version = Version;
+			GameInfo.Mod = ModData.Manifest.Id;
+			GameInfo.Version = ModData.Manifest.Metadata.Version;
 			GameInfo.MapUid = Map.Uid;
 			GameInfo.MapTitle = Map.Title;
 			Recorder.Metadata = new OpenRA.FileFormats.ReplayMetadata(GameInfo);
