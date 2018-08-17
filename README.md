@@ -1,4 +1,7 @@
-# OpenRA
+# OpenRA (forked for server replays)
+
+This fork add server side replay recording and strips all graphical output (so replays can be run fast on headless servers).
+
 
 A Libre/Free Real Time Strategy game engine supporting early Westwood classics.
 
